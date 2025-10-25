@@ -1,32 +1,35 @@
-KeyPull is a command-line utility to extract keybox/keystore data from your Android phone
+KeyPull is a command-line utility to extract keybox/keystore data from your Android phone using ADB.
 
-----
+---
 
-## Installation & Usage (Go)
-If you already have Go installed, you can simply pull the latest version and install:
-```bash
-$ go install github.com/EndowTheGreat/keypull/cmd/keypull@latest
-```
-Or you can build from source:
+## Requirements
+
+* Python 3.10 or newer
+* The Android Debug Bridge (`adb`) available on your `$PATH`
+
+## Installation & Usage
+
+Clone the repository and invoke the module directly with Python:
+
 ```bash
 $ git clone https://github.com/EndowTheGreat/keypull.git
 $ cd keypull
-$ make && cd bin
-# or: go build -o bin/keypull cmd/keypull/main.go
-$ ./keypull
-```
-
-## Python Port
-A pure Python reimplementation that mirrors the Go tool is available in the `pykeypull/` directory.
-Run it with Python 3.10+ after cloning the repository:
-```bash
 $ python -m pykeypull --help
 ```
-By default the script pulls the same well-known locations as the Go version. You can override the
-output directory or provide custom device paths:
+
+By default the script pulls the same well-known locations as the original Go implementation. You can
+override the output directory or provide custom device paths:
+
 ```bash
 $ python -m pykeypull --output extracted /custom/device/path /another/location
 ```
 
-## Contributing
-Pull requests and contributions are absolutely welcome, feel free to fork or improve upon my work however you wish.
+## Development
+
+Run the unit test suite with:
+
+```bash
+$ make test
+```
+
+Pull requests and contributions are absolutely welcome—feel free to fork or improve upon the project however you wish.
