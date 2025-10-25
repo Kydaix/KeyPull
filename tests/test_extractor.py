@@ -1,17 +1,28 @@
+"""Unit tests covering the Extractor workflow."""
+
 import subprocess
 import unittest
 from unittest.mock import call, patch
+
+# Accessing protected members is acceptable in unit tests.
+# pylint: disable=protected-access
 
 from pykeypull.extractor import Extractor, ExtractionError
 
 
 class ExtractorTests(unittest.TestCase):
+    """Behavioural tests for the :class:`Extractor` class."""
+
     def setUp(self) -> None:
+        """Create a fresh extractor instance for each test."""
+
         # Ensure output directory uses a temporary unique path for tests
         self.extractor = Extractor(output="test-output")
         self.addCleanup(self._cleanup_output)
 
     def _cleanup_output(self) -> None:
+        """Remove any output directory created during a test run."""
+
         if self.extractor.output.exists():
             for child in self.extractor.output.iterdir():
                 if child.is_file():
@@ -19,6 +30,8 @@ class ExtractorTests(unittest.TestCase):
             self.extractor.output.rmdir()
 
     def test_adb_stat_detects_device(self) -> None:
+        """ADB device discovery should record the first connected device."""
+
         with patch("pykeypull.extractor.subprocess.run") as mock_run:
             mock_run.side_effect = [
                 subprocess.CompletedProcess(args=[], returncode=0, stdout=b"", stderr=b""),
@@ -52,11 +65,15 @@ class ExtractorTests(unittest.TestCase):
         )
 
     def test_obtain_root_via_adb(self) -> None:
+        """Rooting via ADB should succeed when the command runs cleanly."""
+
         self.extractor.device = "ABC123"
         with patch("pykeypull.extractor.subprocess.run") as mock_run, patch(
-            "pykeypull.extractor.time.sleep"
+            "pykeypull.extractor.time.sleep",
         ) as mock_sleep:
-            mock_run.return_value = subprocess.CompletedProcess(args=[], returncode=0, stdout=b"", stderr=b"")
+            mock_run.return_value = subprocess.CompletedProcess(
+                args=[], returncode=0, stdout=b"", stderr=b""
+            )
 
             self.extractor.obtain_root()
 
@@ -69,6 +86,8 @@ class ExtractorTests(unittest.TestCase):
         mock_sleep.assert_called_once_with(2)
 
     def test_obtain_root_falls_back_to_su(self) -> None:
+        """If root fails, the extractor should attempt an SU fallback."""
+
         self.extractor.device = "ABC123"
         with patch("pykeypull.extractor.subprocess.run") as mock_run:
             mock_run.side_effect = [
@@ -91,6 +110,8 @@ class ExtractorTests(unittest.TestCase):
         )
 
     def test_obtain_root_raises_when_su_fails(self) -> None:
+        """The extractor should raise an error if SU access is unavailable."""
+
         self.extractor.device = "ABC123"
         with patch("pykeypull.extractor.subprocess.run") as mock_run:
             mock_run.side_effect = [
@@ -102,12 +123,16 @@ class ExtractorTests(unittest.TestCase):
                 self.extractor.obtain_root()
 
     def test_pull_directory_pulls_each_file(self) -> None:
+        """Directory extraction should download each discovered file."""
+
         self.extractor.device = "ABC123"
         directory_listing = "/data/file1\n/data/keybox.xml\n"
 
-        with patch("pykeypull.extractor.subprocess.run") as mock_run, patch.object(
-            self.extractor, "_adb_pull"
-        ) as mock_pull, patch("pykeypull.extractor.validate_keybox") as mock_validate:
+        with (
+            patch("pykeypull.extractor.subprocess.run") as mock_run,
+            patch.object(self.extractor, "_adb_pull") as mock_pull,
+            patch("pykeypull.extractor.validate_keybox") as mock_validate,
+        ):
             mock_run.return_value = subprocess.CompletedProcess(
                 args=[], returncode=0, stdout=directory_listing, stderr=""
             )
@@ -128,6 +153,8 @@ class ExtractorTests(unittest.TestCase):
         mock_validate.assert_called_once_with(expected_destinations[1])
 
     def test_extract_all_collects_successful_locations(self) -> None:
+        """Only successful extraction locations should be returned."""
+
         locations = ["one", "two", "three"]
 
         with patch.object(self.extractor, "extract_from_location") as mock_extract:

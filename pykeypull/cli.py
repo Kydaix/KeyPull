@@ -10,7 +10,11 @@ from .locations import DEVICE_LOCATIONS
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Extract Android keystore and keybox files over ADB")
+    """Build the command-line argument parser for the KeyPull CLI."""
+
+    parser = argparse.ArgumentParser(
+        description="Extract Android keystore and keybox files over ADB",
+    )
     parser.add_argument(
         "locations",
         nargs="*",
@@ -30,6 +34,8 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def run(argv: Sequence[str] | None = None) -> int:
+    """Execute the extraction workflow and return the exit status."""
+
     parser = build_parser()
     args = parser.parse_args(argv)
 
@@ -58,4 +64,6 @@ def run(argv: Sequence[str] | None = None) -> int:
 
 
 def main() -> None:
+    """Entrypoint used by ``python -m`` and console scripts."""
+
     raise SystemExit(run())

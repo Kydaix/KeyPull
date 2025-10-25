@@ -10,24 +10,32 @@ import xml.etree.ElementTree as ET
 
 @dataclass
 class Certificate:
+    """Represent a single certificate element in the XML structure."""
+
     format: str
     data: str
 
 
 @dataclass
 class CertificateChain:
+    """Container for the certificates associated with a key."""
+
     number_of_certificates: int
     certificates: List[Certificate] = field(default_factory=list)
 
 
 @dataclass
 class PrivateKey:
+    """Hold the private key metadata referenced by a key entry."""
+
     format: str
     data: str
 
 
 @dataclass
 class Key:
+    """Full key entry combining algorithm, private key, and certificates."""
+
     algorithm: str
     private_key: PrivateKey
     certificate_chain: CertificateChain
@@ -35,12 +43,16 @@ class Key:
 
 @dataclass
 class Keybox:
+    """Group of keys tied to a specific device identifier."""
+
     device_id: str
     keys: List[Key] = field(default_factory=list)
 
 
 @dataclass
 class Attestation:
+    """Root element representing the contents of a keybox file."""
+
     number_of_keyboxes: int
     keyboxes: List[Keybox] = field(default_factory=list)
 
@@ -131,12 +143,8 @@ def validate(path: Path) -> Attestation:
     for index, keybox in enumerate(attestation.keyboxes, start=1):
         print(f"Keybox {index} - Device ID: {keybox.device_id}")
         for key_index, key in enumerate(keybox.keys, start=1):
-            print(
-                "  Key {idx}: Algorithm={alg}, Certificates={count}".format(
-                    idx=key_index,
-                    alg=key.algorithm or "unknown",
-                    count=key.certificate_chain.number_of_certificates,
-                )
-            )
+            certificate_count = key.certificate_chain.number_of_certificates
+            algorithm = key.algorithm or "unknown"
+            print(f"  Key {key_index}: Algorithm={algorithm}, Certificates={certificate_count}")
 
     return attestation
