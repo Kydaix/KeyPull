@@ -1,2 +1,4 @@
-build:
-	@go build -o bin/keypull -ldflags "-s -w" cmd/keypull/main.go
+.PHONY: test
+
+test:
+	python -m unittest discover -s tests
