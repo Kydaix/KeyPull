@@ -37,7 +37,8 @@ class Extractor:
         except FileNotFoundError as exc:
             raise ExtractionError("ADB executable not found in PATH") from exc
         except subprocess.CalledProcessError as exc:
-            raise ExtractionError(f"failed to start ADB server: {exc.stderr.decode().strip()}") from exc
+            error = exc.stderr.decode().strip()
+            raise ExtractionError(f"failed to start ADB server: {error}") from exc
 
         try:
             result = subprocess.run(
@@ -48,7 +49,8 @@ class Extractor:
                 text=True,
             )
         except subprocess.CalledProcessError as exc:
-            raise ExtractionError(f"failed to fetch connected devices: {exc.stderr.strip()}") from exc
+            error = exc.stderr.strip()
+            raise ExtractionError(f"failed to fetch connected devices: {error}") from exc
 
         connected: List[str] = []
         for line in result.stdout.splitlines():
@@ -89,7 +91,8 @@ class Extractor:
                 )
             except subprocess.CalledProcessError:
                 raise ExtractionError(
-                    "root access required but not available. Please root your device or enable root access in Developer Options."
+                    "root access required but not available. Enable Developer Options "
+                    "root access or root the device."
                 ) from None
             print("Obtained root via SU")
             return
@@ -100,6 +103,8 @@ class Extractor:
     # ------------------------------------------------------------------
     # File operations
     def ensure_output_directory(self) -> None:
+        """Create the output directory if it does not already exist."""
+
         self.output.mkdir(parents=True, exist_ok=True)
 
     def extract_from_location(self, location: str) -> None:
@@ -115,10 +120,14 @@ class Extractor:
     # ------------------------------------------------------------------
     # Internal helpers
     def _ensure_device(self) -> None:
+        """Verify that a device has been discovered before continuing."""
+
         if not self.device:
             raise ExtractionError("ADB device not initialised; call adb_stat() first")
 
     def _adb_pull(self, remote: str, local: Path) -> None:
+        """Pull a file from the device to the local filesystem."""
+
         self._ensure_device()
 
         local.parent.mkdir(parents=True, exist_ok=True)
@@ -130,7 +139,8 @@ class Extractor:
                 stderr=subprocess.PIPE,
             )
         except subprocess.CalledProcessError as exc:
-            raise ExtractionError(f"ADB pull failed for {remote}: {exc.stderr.decode().strip()}") from exc
+            error = exc.stderr.decode().strip()
+            raise ExtractionError(f"ADB pull failed for {remote}: {error}") from exc
 
     def _pull_keybox(self, remote: str) -> None:
         destination = self.output / Path(remote).name
